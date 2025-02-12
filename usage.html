@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>DDoS탐지 SOC 메뉴얼 - 사용법</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <h1>DDoS탐지 SOC 메뉴얼</h1>
+  </header>
+  <nav>
+    <ul>
+      <li><a href="index.html">홈</a></li>
+      <li><a href="usage.html">사용법</a></li>
+      <li><a href="features.html">기능</a></li>
+      <li><a href="tech.html">기술</a></li>
+      <li><a href="contact.html">연락처</a></li>
+    </ul>
+  </nav>
+  <div class="container">
+    <section>
+      <h2>사용법</h2>
+      <p>
+        이 시스템은 Docker Compose를 통해 실행됩니다. 아래 단계를 따라 시스템을 실행해보세요.
+      </p>
+
+      <!-- 1. 사전 준비 -->
+      <h3>1. 사전 준비 (Linux 기준)</h3>
+      <ul>
+        <li>Docker 및 Docker Compose가 설치되어 있어야 합니다.</li>
+        <li>No-IP 사이트 등에서 본인의 DDNS를 생성해야 합니다. (예: <code>https://lcs9317.ddns.net</code>)</li>
+      </ul>
+
+      <!-- 2. 프로젝트 클론 및 디렉토리 이동 -->
+      <h3>2. 프로젝트 클론 및 디렉토리 이동</h3>
+      <pre>
+git clone https://github.com/lcs9317/SOC.git
+cd SOC
+      </pre>
+
+      <!-- 3. Docker Compose 빌드 -->
+      <h3>3. Docker Compose 빌드</h3>
+      <pre>
+docker-compose build
+      </pre>
+
+      <!-- 4. 트레이너 실행 (학습 진행) -->
+      <h3>4. 트레이너 실행 (학습 진행)</h3>
+      <pre>
+docker-compose run trainer
+      </pre>
+
+      <!-- 5. DDNS 설정 변경 -->
+      <h3>5. DDNS 설정 변경</h3>
+      <p>
+        프로젝트 폴더 내 <code>project/nginx/conf/default.conf</code> 파일에서 <code>server_name</code> 항목을 본인의 DDNS 주소로 수정합니다.
+        <br>※ 8080번과 443번 포트 모두 수정해 주세요.
+      </p>
+      <p>
+        <em>참고: 본 작성자는 WSL 환경에서 작업 중이라 80번 포트를 비울 수 없으므로 8080번을 사용합니다.</em>
+      </p>
+
+      <!-- 6. 포트 프록시 설정 (WSL/Windows의 경우) -->
+      <h3>6. 포트 프록시 설정 (WSL/Windows의 경우)</h3>
+      <p>
+        8080번 포트를 사용하려면 포트 프록시 설정이 필요합니다. Windows CMD에서 아래 명령어를 실행합니다:
+      </p>
+      <pre>
+netsh interface portproxy add v4tov4 listenport=80 listenaddress=0.0.0.0 connectport=8080 connectaddress=[WSL의 IP]
+      </pre>
+      <p>
+        WSL이 아닌 경우 80번 포트를 사용하는 포트 프록시 서비스(iphlpsvc)를 사용하고, Windows라면 IIS를 종료해 주십시오.
+      </p>
+
+      <!-- 7. Docker Compose 서비스 시작 -->
+      <h3>7. Docker Compose 서비스 시작</h3>
+      <pre>
+docker-compose up -d
+      </pre>
+
+      <!-- 8. Elasticsearch 토큰 생성 -->
+      <h3>8. Elasticsearch 토큰 생성</h3>
+      <p>
+        아래 명령어로 Elasticsearch 컨테이너에 접속합니다:
+      </p>
+      <pre>
+docker run -it elasticsearch bash
+      </pre>
+      <p>
+        컨테이너 내부에서 다음 명령어를 실행하여 토큰을 생성하고 출력된 토큰을 보관합니다:
+      </p>
+      <pre>
+bin/elasticsearch-service-tokens create elastic/kibana my-token
+      </pre>
+
+      <!-- 9. Docker Compose 설정 수정 -->
+      <h3>9. Docker Compose 설정 수정</h3>
+      <p>
+        보관한 토큰을 <code>docker-compose.yml</code> 파일 내 <code>kibana</code> 서비스의 environment 항목에 있는 <code>ELASTICSEARCH_SERVICEACCOUNTTOKEN=</code> 뒤에 추가합니다.
+      </p>
+
+      <!-- 10. 서비스 재시작 -->
+      <h3>10. 서비스 재시작</h3>
+      <pre>
+docker-compose down
+docker-compose up -d
+      </pre>
+
+      <!-- 11. 접속 -->
+      <h3>11. 접속</h3>
+      <p>
+        모든 서비스가 정상적으로 실행되면, 아이디 <code>elastic</code>과 비밀번호 <code>root</code>를 사용하여 Kibana에 접속합니다.
+      </p>
+      <p>
+        이로써 설정 및 실행이 완료됩니다.
+      </p>
+    </section>
+  </div>
+  <footer>
+    <p>&copy; 2025 [본인 이름]. All rights reserved.</p>
+  </footer>
+</body>
+</html>
